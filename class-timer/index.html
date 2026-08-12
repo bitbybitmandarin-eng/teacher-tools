@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title></title>
+<style>html,body{margin:0;height:100%;background:#fff8e9;font-family:Arial,sans-serif}.loading{height:100%;display:grid;place-items:center;font-weight:800;color:#181817}</style>
+</head>
+<body>
+<div class="loading">Loading…</div>
+<script>
+(async()=>{
+  try{
+    const decoder=new TextDecoder('utf-8');
+    const parts=[];
+    for(let i=0;i<8;i++){
+      const name=String(i).padStart(2,'0');
+      const res=await fetch(`../class-timer-src/chunk${name}.b64`,{cache:'no-store'});
+      if(!res.ok) throw new Error(`Missing chunk ${name}`);
+      const b64=(await res.text()).trim();
+      const bin=atob(b64);
+      const bytes=Uint8Array.from(bin,c=>c.charCodeAt(0));
+      parts.push(decoder.decode(bytes));
+    }
+    const html=parts.join('');
+    document.open();
+    document.write(html);
+    document.close();
+  }catch(err){
+    document.body.innerHTML='<div class="loading">Could not load the classroom timer.</div>';
+    console.error(err);
+  }
+})();
+</script>
+</body>
+</html>
