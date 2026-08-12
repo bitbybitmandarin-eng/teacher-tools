@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title></title>
+<!-- Layout fix v2: prevents overlap on short laptop screens -->
+<style>
+@font-face{
+  font-family:"AppChinese";
+  src:local("兰亭黑-简"),local("Lantinghei SC"),local("FZLanTingHeiS-R-GB"),local("FZLanTingHeiS");
+  font-style:normal;font-weight:100 900;font-display:swap;
+  unicode-range:U+2E80-2EFF,U+2F00-2FDF,U+3000-303F,U+31C0-31EF,U+3400-4DBF,U+4E00-9FFF,U+F900-FAFF,U+FF00-FFEF;
+}
+:root{
+  --ink:#181817;--paper:#fff8e9;--rose:#f3b7c5;--blue:#a7d8e4;--gold:#f4cf6d;
+  --cream:#ffe1a8;--sage:#b8cf9d;--coral:#f08b72;--lilac:#cbb9df;--deep:#543d58;
+  --line:rgba(24,24,23,.20);--panel:rgba(255,248,233,.88);--shadow:0 18px 55px rgba(24,24,23,.12);
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--paper);color:var(--ink);font-family:Arial,Helvetica,"Noto Sans",sans-serif;overflow:hidden}
+button,input,textarea{font:inherit}.cn,#displayTitle,#displayMeta,#displaySubtitle,#displayInstructions,#titleInput,#metaInput,#subtitleInput,#instructionsInput,#endTimerName,#namesInput,#pickedName{font-family:"AppChinese",Arial,Helvetica,"Noto Sans SC","Microsoft YaHei",sans-serif}
+button{color:inherit}
+.art{position:fixed;inset:0;z-index:-3;overflow:hidden;background:var(--paper)}
+.shape{position:absolute;opacity:.92;mix-blend-mode:multiply;pointer-events:none}
+.orb-a{width:min(54vw,760px);aspect-ratio:1;border-radius:50%;background:var(--rose);left:-13vw;top:-22vw}
+.orb-b{width:min(44vw,620px);aspect-ratio:1;border-radius:50%;background:var(--blue);right:-10vw;bottom:-19vw}
+.orb-c{width:min(29vw,390px);aspect-ratio:1;border-radius:50%;border:clamp(24px,4vw,64px) solid var(--gold);right:11vw;top:4vh;opacity:.76}
+.petal{width:23vw;height:50vw;max-height:720px;background:var(--cream);border-radius:50% 50% 42% 58% / 68% 50% 50% 32%;transform:rotate(31deg);left:34vw;top:-23vw}
+.slash{width:34vw;height:8vw;background:var(--sage);transform:rotate(-18deg);left:19vw;bottom:2vh;border-radius:999px 28px 999px 28px;opacity:.72}
+.line-art{position:absolute;width:19vw;aspect-ratio:1;left:45vw;bottom:-6vw;border:2px solid rgba(24,24,23,.30);border-radius:50%}
+.line-art::before,.line-art::after{content:"";position:absolute;inset:13%;border:2px solid rgba(24,24,23,.24);border-radius:50%}.line-art::after{inset:29%}
+.veil{position:fixed;inset:0;z-index:-2;background:linear-gradient(115deg,rgba(255,248,233,.34),rgba(255,248,233,.10))}
+.shell{height:100dvh;min-height:0;padding:clamp(10px,1.8vw,26px);display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:clamp(6px,1vh,12px);overflow:hidden}
+header{display:flex;align-items:center;justify-content:flex-end;gap:16px;border-top:2px solid var(--ink);padding-top:11px}
+.brand{display:flex;align-items:center;gap:12px;text-transform:uppercase;letter-spacing:.16em;font-size:12px;font-weight:850;white-space:nowrap}
+.mark{width:28px;aspect-ratio:1;border:1.5px solid var(--ink);border-radius:50%;position:relative}.mark::before,.mark::after{content:"";position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--ink)}.mark::before{width:1.5px;height:118%}.mark::after{height:1.5px;width:118%}
+.nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}.btn{border:1.5px solid var(--ink);background:rgba(255,248,233,.70);padding:9px 14px;min-height:40px;border-radius:999px;font-weight:800;cursor:pointer;transition:.18s ease;backdrop-filter:blur(12px)}.btn:hover{transform:translateY(-1px);background:var(--ink);color:var(--paper)}.btn:active{transform:none}.btn.primary,.btn.active{background:var(--ink);color:var(--paper)}.btn.primary:hover{background:var(--deep)}.btn.icon{width:42px;padding:0;display:grid;place-items:center}.btn[disabled]{opacity:.35;cursor:not-allowed;transform:none}
+.workspace{min-height:0;position:relative;overflow:hidden}.view{display:none;height:100%;min-height:0}.view.active{display:block}
+/* TIMER */
+#timerView.active{display:grid;grid-template-columns:minmax(240px,.72fr) minmax(430px,1.45fr);gap:clamp(18px,4vw,60px);align-items:center;height:100%;min-height:0;overflow:hidden}
+.details{align-self:center;max-width:620px;min-height:0;overflow:hidden}.eyebrow{font-size:clamp(12px,1.05vw,15px);text-transform:uppercase;letter-spacing:.19em;font-weight:850;margin-bottom:18px}#displayTitle{margin:0;font-family:"AppChinese",Georgia,"Times New Roman",serif;font-size:clamp(34px,min(5vw,8vh),76px);line-height:.92;font-weight:500;letter-spacing:-.04em;max-width:10ch;text-wrap:balance}#displaySubtitle{margin:clamp(10px,2vh,22px) 0 0;font-size:clamp(14px,min(1.5vw,2.4vh),23px);line-height:1.28;font-weight:650;max-width:34ch;white-space:pre-line}#displayInstructions{margin:clamp(10px,2vh,22px) 0 0;padding-top:clamp(8px,1.5vh,15px);border-top:1.5px solid var(--ink);font-size:clamp(12px,min(1.1vw,2vh),17px);line-height:1.38;max-width:48ch;white-space:pre-line;max-height:26vh;overflow:hidden}
+.timer-stage{min-width:0;min-height:0;align-self:stretch;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden}.timer-disc{width:min(50vw,620px,calc(100dvh - 205px));aspect-ratio:1;border-radius:50%;display:grid;place-items:center;position:relative;background:rgba(255,225,168,.78);box-shadow:var(--shadow);border:2px solid var(--ink);isolation:isolate}.timer-disc::before{content:"";position:absolute;inset:8.5%;border-radius:50%;border:1.5px solid rgba(24,24,23,.72)}.timer-disc::after{content:"";position:absolute;width:19%;aspect-ratio:1;border-radius:50%;background:var(--coral);right:7.5%;top:16%;border:1.5px solid var(--ink);z-index:-1;transition:.35s ease}.clock-wrap{text-align:center;transform:translateY(-1%)}.status{text-transform:uppercase;letter-spacing:.22em;font-weight:850;font-size:clamp(11px,1.1vw,15px);margin-bottom:16px}#countdown{font-family:"Courier New",Courier,monospace;font-variant-numeric:tabular-nums;font-size:clamp(58px,min(9vw,15vh),138px);line-height:.88;letter-spacing:-.075em;font-weight:800}.micro{margin-top:18px;font-size:clamp(12px,1.05vw,16px);font-weight:700;letter-spacing:.04em}.progress{position:absolute;inset:3.8%;border-radius:50%;pointer-events:none;background:conic-gradient(var(--ink) calc(var(--p,0)*1%),transparent 0);-webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 7px),#000 calc(100% - 6px));mask:radial-gradient(farthest-side,transparent calc(100% - 7px),#000 calc(100% - 6px));opacity:.58;transition:background .35s linear}.timer-controls{display:flex;flex-wrap:wrap;gap:7px;justify-content:center;margin-top:clamp(7px,1.5vh,14px);flex:0 0 auto}.timer-controls .btn{min-height:34px;padding:6px 11px}
+body.warning .timer-disc{background:rgba(243,183,197,.82)}body.warning .timer-disc::after{background:var(--gold)}body.critical .timer-disc{background:rgba(240,139,114,.87)}body.critical .timer-disc::after{background:var(--paper);transform:scale(1.23)}body.finished .timer-disc{background:var(--ink);color:var(--paper)}body.finished .timer-disc::before{border-color:var(--paper)}body.finished .progress{opacity:0}body.finished .timer-disc::after{background:var(--gold);border-color:var(--paper)}
+/* RANDOM */
+#randomView.active{display:grid;grid-template-columns:minmax(320px,.82fr) minmax(500px,1.35fr);gap:clamp(22px,4.5vw,64px);align-items:start;padding:clamp(8px,1.6vw,22px) 0}.random-panel,.picker-stage{border:1.5px solid var(--ink);background:rgba(255,248,233,.76);box-shadow:var(--shadow);backdrop-filter:blur(14px);min-height:0}.random-panel{padding:clamp(20px,2.5vw,34px);display:flex;flex-direction:column;overflow:auto;overscroll-behavior:contain;max-height:calc(100dvh - 150px)}.random-panel h1{font-family:Georgia,"Times New Roman",serif;font-size:clamp(38px,4.5vw,68px);font-weight:500;letter-spacing:-.04em;line-height:.95;margin:0 0 12px;flex:0 0 auto}.small-copy{font-size:14px;line-height:1.45;opacity:.72;margin-bottom:18px;flex:0 0 auto}.field{display:grid;gap:7px;margin-bottom:15px}.field label{font-size:12px;font-weight:850;letter-spacing:.12em;text-transform:uppercase}.field input,.field textarea,.field select{width:100%;border:1.5px solid var(--ink);background:#fffdf5;color:var(--ink);padding:12px;outline:none}.field textarea{min-height:150px;resize:vertical;line-height:1.45}.field select{appearance:auto;font-weight:800}.class-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;flex:0 0 auto}.class-row .field{margin-bottom:10px}.class-count{font-size:11px;font-weight:850;letter-spacing:.08em;text-transform:uppercase;opacity:.68;white-space:nowrap;padding:0 0 12px}.random-panel>.field{flex:1 1 150px;min-height:100px;grid-template-rows:auto minmax(72px,1fr)}.random-panel #namesInput{height:100%;min-height:0;max-height:none;resize:none;overflow:auto}.field input:focus,.field textarea:focus{box-shadow:0 0 0 3px rgba(167,216,228,.45)}.name-actions{display:flex;gap:8px;flex-wrap:wrap;flex:0 0 auto}.name-actions .btn{flex:1 1 125px}.toggle-line{display:flex;align-items:flex-start;gap:10px;margin:4px 0 14px;font-size:13px;font-weight:750;line-height:1.35;flex:0 0 auto}.toggle-line input{width:18px;height:18px;accent-color:var(--ink);flex:0 0 18px;margin-top:2px}
+.picker-stage{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:clamp(24px,4vw,55px);overflow:auto;max-height:calc(100dvh - 150px)}.picker-stage::before{content:"";position:absolute;width:52%;aspect-ratio:1;border-radius:50%;background:var(--lilac);left:-18%;top:-16%;mix-blend-mode:multiply;opacity:.75}.picker-stage::after{content:"";position:absolute;width:34%;aspect-ratio:1;border-radius:50%;background:var(--gold);right:-8%;bottom:-12%;mix-blend-mode:multiply;opacity:.8}.picker-content{z-index:1;width:100%;text-align:center}.pool-stat{text-transform:uppercase;letter-spacing:.19em;font-size:12px;font-weight:850;margin-bottom:30px}.name-disc{width:min(49vw,610px);aspect-ratio:1;border-radius:50%;background:rgba(167,216,228,.78);border:2px solid var(--ink);margin:auto;display:grid;place-items:center;position:relative;box-shadow:var(--shadow)}.name-disc::before{content:"";position:absolute;inset:7%;border-radius:50%;border:1.5px solid rgba(24,24,23,.6)}.pick-label{text-transform:uppercase;letter-spacing:.22em;font-size:12px;font-weight:850;margin-bottom:16px}.picked-wrap{padding:22px;max-width:90%;margin:auto}#pickedName{font-family:"AppChinese",Georgia,"Times New Roman",serif;font-size:clamp(38px,5.8vw,84px);font-weight:650;line-height:1.03;word-break:break-word;text-wrap:balance}.picker-controls{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin-top:22px}.picker-controls .pick-main{font-size:17px;padding:11px 22px}.history{width:100%;margin-top:22px;padding-top:15px;border-top:1.5px solid var(--ink);text-align:left}.history-head{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:11px;letter-spacing:.14em;text-transform:uppercase;font-weight:850}.history-list{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px;max-height:76px;overflow:auto}.chip{border:1px solid var(--ink);border-radius:999px;padding:6px 10px;background:rgba(255,255,255,.45);font-size:12px;font-weight:750}
+/* Drawer */
+.drawer{position:fixed;z-index:20;top:0;right:0;height:100dvh;width:min(440px,94vw);background:rgba(255,248,233,.98);border-left:2px solid var(--ink);box-shadow:-24px 0 70px rgba(24,24,23,.18);padding:22px;display:flex;flex-direction:column;transform:translateX(102%);transition:transform .28s cubic-bezier(.2,.8,.2,1);overflow:auto}.drawer.open{transform:translateX(0)}.drawer-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}.drawer h2{margin:0;font-family:Georgia,serif;font-size:32px;font-weight:500}.time-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.quick-times{display:flex;flex-wrap:wrap;gap:7px}.quick-times button{flex:1 1 58px}.drawer-actions{display:flex;gap:8px;margin-top:3px}.drawer-actions .btn{flex:1}.sep{height:1px;background:var(--line);margin:6px 0 18px}
+.end-card{position:fixed;inset:0;z-index:50;background:var(--gold);display:none;place-items:center;text-align:center;padding:32px}.end-card.show{display:grid}.end-inner{width:min(980px,92vw);border-top:2px solid var(--ink);border-bottom:2px solid var(--ink);padding:clamp(50px,8vw,110px) 15px;position:relative}.end-inner::before{content:"";position:absolute;width:140px;aspect-ratio:1;border-radius:50%;background:var(--rose);border:2px solid var(--ink);left:4%;top:-42px;mix-blend-mode:multiply}.end-card h2{margin:0;font-family:Georgia,serif;font-weight:500;line-height:.84;font-size:clamp(70px,13vw,180px);letter-spacing:-.055em}.end-card p{font-size:clamp(18px,2vw,28px);font-weight:750}.end-actions{display:flex;justify-content:center;gap:10px;margin-top:28px}
+footer{border-bottom:2px solid var(--ink);padding-bottom:7px;min-height:0;display:flex;justify-content:space-between;gap:18px;align-items:flex-end;font-size:12px;font-weight:750}.hint{opacity:.70}#finishTime{font-variant-numeric:tabular-nums}
+@media(max-height:820px) and (min-width:801px){
+  .shell{padding:9px 16px;gap:6px}
+  header{padding-top:6px}
+  .brand{font-size:10.5px}
+  .mark{width:24px}
+  .nav .btn{min-height:32px;padding:5px 10px;font-size:12px}
+  #timerView.active{grid-template-columns:minmax(210px,.7fr) minmax(390px,1.35fr);gap:clamp(16px,3vw,38px)}
+  .details .eyebrow{font-size:10.5px;margin-bottom:8px}
+  #displayTitle{font-size:clamp(30px,min(4.6vw,6.8vh),60px);line-height:.94}
+  #displaySubtitle{margin-top:9px;font-size:clamp(13px,min(1.35vw,2.1vh),18px)}
+  #displayInstructions{margin-top:10px;padding-top:8px;font-size:clamp(11px,min(1vw,1.7vh),14px);line-height:1.3;max-height:22vh}
+  .timer-disc{width:min(45vw,520px,calc(100dvh - 174px))}
+  .status{font-size:10px;margin-bottom:8px}
+  #countdown{font-size:clamp(54px,min(8vw,13vh),104px)}
+  .micro{margin-top:9px;font-size:11.5px}
+  .timer-controls{margin-top:7px;gap:5px}
+  .timer-controls .btn{min-height:30px;padding:4px 9px;font-size:11px}
+  footer{padding-bottom:5px;font-size:10.5px}
+}
+@media(max-height:760px) and (min-width:951px){
+  .shell{padding:12px 20px;gap:8px}
+  header{padding-top:7px}
+  .brand{font-size:11px}
+  .nav .btn{min-height:34px;padding:6px 11px}
+  #randomView.active{padding:2px 0;gap:22px;align-items:stretch}
+  .random-panel,.picker-stage{max-height:none;height:100%;min-height:0}
+  .random-panel{padding:12px 18px;overflow:hidden}
+  .random-panel .eyebrow{margin-bottom:6px;font-size:11px}
+  .random-panel h1{font-size:clamp(32px,3vw,44px);line-height:.88;margin-bottom:7px}
+  .random-panel .small-copy{font-size:12px;line-height:1.28;margin-bottom:7px}
+  .random-panel>.field{margin-bottom:7px;min-height:72px;grid-template-rows:auto minmax(54px,1fr)}
+  .random-panel .field label{font-size:11px}
+  .random-panel .class-row{gap:6px}
+  .random-panel .class-row .field{margin-bottom:5px}
+  .random-panel .field select{padding:6px 8px;font-size:12px}
+  .random-panel .class-count{font-size:9.5px;padding-bottom:9px}
+  .random-panel #namesInput{padding:8px;font-size:13px}
+  .toggle-line{margin:1px 0 7px;font-size:11.5px;line-height:1.22;gap:8px}
+  .toggle-line input{width:16px;height:16px;flex-basis:16px}
+  .name-actions{gap:6px}
+  .random-panel .btn{min-height:33px;padding:6px 10px;font-size:12px}
+  .picker-stage{padding:10px 18px;overflow:hidden}
+  .pool-stat{margin-bottom:8px;font-size:10.5px}
+  .name-disc{width:min(38vw,390px,calc(100dvh - 230px))}
+  .pick-label{font-size:10.5px;margin-bottom:10px}
+  .picked-wrap{padding:14px}
+  #pickedName{font-size:clamp(32px,4.3vw,58px)}
+  .picker-controls{margin-top:8px;gap:6px}
+  .picker-controls .btn{min-height:32px;padding:5px 10px;font-size:11.5px}
+  .picker-controls .pick-main{font-size:13px;padding:6px 14px}
+  .history{margin-top:8px;padding-top:7px}
+  .history-head{font-size:9.5px}
+  .history-list{margin-top:5px;max-height:34px;gap:5px}
+  .chip{padding:4px 8px;font-size:10.5px}
+  footer{padding-bottom:6px;font-size:11px}
+}
+@media(max-width:800px){
+  .shell{padding:10px;gap:5px}
+  .brand span:last-child{display:none}
+  .nav .navtext{display:none}
+  #timerView.active{grid-template-columns:minmax(180px,.7fr) minmax(330px,1.3fr);gap:12px}
+  .timer-disc{width:min(52vw,440px,calc(100dvh - 180px))}
+  #displayTitle{font-size:clamp(28px,5.4vw,48px)}
+  #displaySubtitle{font-size:clamp(12px,1.8vw,16px)}
+  #displayInstructions{font-size:clamp(10.5px,1.45vw,13px);max-height:20vh}
+  .hint{display:none}
+}
+@media(max-width:600px){
+  body{overflow:hidden}
+  #timerView.active{grid-template-columns:1fr;grid-template-rows:auto minmax(0,1fr);gap:4px}
+  .details{text-align:center;max-width:none;align-self:start}
+  .details .eyebrow,#displaySubtitle,#displayInstructions{display:none}
+  #displayTitle{max-width:none;font-size:clamp(24px,7vw,38px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .timer-disc{width:min(76vw,calc(100dvh - 220px),390px)}
+  #countdown{font-size:clamp(50px,17vw,86px)}
+  footer{font-size:9.5px}
+  #randomView.active{grid-template-columns:1fr;height:100%;overflow:auto}
+  .random-panel,.picker-stage{min-height:500px;max-height:none}
+  .name-disc{width:78vw}
+}
+
+/* User-requested proportion update: larger timer, smaller class panel, larger selector stage */
+@media(min-width:951px){
+  #timerView.active{
+    grid-template-columns:minmax(230px,.62fr) minmax(520px,1.68fr);
+    gap:clamp(16px,3vw,42px);
+  }
+  .timer-disc{
+    width:min(56vw,700px,calc(100dvh - 170px));
+  }
+  #countdown{
+    font-size:clamp(64px,min(9.6vw,16vh),148px);
+  }
+
+  #randomView.active{
+    grid-template-columns:minmax(250px,.52fr) minmax(610px,1.85fr);
+    gap:clamp(18px,2.8vw,38px);
+  }
+  .random-panel{
+    padding:clamp(16px,1.8vw,24px);
+  }
+  .random-panel h1{
+    font-size:clamp(34px,3.4vw,54px);
+  }
+  .random-panel .small-copy{
+    font-size:13px;
+    margin-bottom:12px;
+  }
+  .picker-stage{
+    padding-left:clamp(20px,3vw,42px);
+    padding-right:clamp(20px,3vw,42px);
+  }
+  .name-disc{
+    width:min(56vw,690px,calc(100dvh - 195px));
+  }
+}
+
+@media(max-height:820px) and (min-width:951px){
+  .timer-disc{
+    width:min(53vw,585px,calc(100dvh - 155px));
+  }
+  #countdown{
+    font-size:clamp(58px,min(8.7vw,14.5vh),116px);
+  }
+  #randomView.active{
+    grid-template-columns:minmax(240px,.48fr) minmax(600px,1.9fr);
+    gap:20px;
+  }
+  .name-disc{
+    width:min(47vw,455px,calc(100dvh - 235px));
+  }
+}
+
+@media(min-width:801px) and (max-width:1100px){
+  #randomView.active{
+    grid-template-columns:minmax(225px,.58fr) minmax(500px,1.55fr);
+    gap:16px;
+  }
+  .random-panel{padding:14px 16px;}
+  .name-disc{width:min(50vw,480px,calc(100dvh - 185px));}
+}
+
+
+/* Picker spacing: keep pool status clear of the top border. */
+.pool-stat{margin-top:14px;}
+@media(max-height:820px) and (min-width:801px){
+  .pool-stat{margin-top:12px;}
+}
+
+</style>
+</head>
+<body>
+<div class="art" aria-hidden="true"><div class="shape orb-a"></div><div class="shape orb-b"></div><div class="shape orb-c"></div><div class="shape petal"></div><div class="shape slash"></div><div class="line-art"></div></div><div class="veil" aria-hidden="true"></div>
+<div class="shell">
+<header>
+  <div class="nav">
+    <button class="btn active" id="timerTab">⏱ <span class="navtext">Timer</span></button>
+    <button class="btn" id="randomTab">✦ <span class="navtext">Random Student</span></button>
+    <button class="btn icon" id="fullscreenBtn" title="Fullscreen">⛶</button>
+  </div>
+</header>
+<main class="workspace">
+<section class="view active" id="timerView">
+  <section class="details" aria-live="polite">
+    <div class="eyebrow" id="displayMeta"></div><h1 id="displayTitle"></h1><div id="displaySubtitle"></div><div id="displayInstructions"></div>
+  </section>
+  <section class="timer-stage">
+    <div class="timer-disc"><div class="progress" id="progress"></div><div class="clock-wrap"><div class="status" id="status">Ready</div><div id="countdown">40:00</div><div class="micro" id="timeMessage">40 min set</div></div></div>
+    <div class="timer-controls"><button class="btn primary" id="startPauseBtn">Start</button><button class="btn" id="minusBtn">− 1 min</button><button class="btn" id="plusBtn">+ 1 min</button><button class="btn" id="resetBtn">Reset</button><button class="btn" id="editBtn">✦ Edit</button><button class="btn icon" id="soundBtn" title="Sound on">♪</button></div>
+  </section>
+</section>
+<section class="view" id="randomView">
+  <section class="random-panel">
+    <div class="eyebrow">Classroom selector</div><h1>Random<br>Student</h1><div class="small-copy">Choose one of your classes, then pick a student. You can still edit the names if needed.</div>
+    <div class="class-row">
+      <div class="field"><label for="classSelect">Class</label><select id="classSelect"><option value="2HCL">2HCL</option><option value="3CLS">3CLS</option><option value="1G3">1G3</option><option value="1A2">1A2</option><option value="custom">Custom list</option></select></div>
+      <div class="class-count" id="classCount">0 students</div>
+    </div>
+    <div class="field" style="flex:1;min-height:0"><label for="namesInput">Student names</label><textarea id="namesInput" class="cn" placeholder="Paste a custom list here…" spellcheck="false"></textarea></div>
+    <label class="toggle-line"><input id="noRepeatToggle" type="checkbox" checked> No repeats until everyone has been selected</label>
+    <div class="name-actions"><button class="btn primary" id="saveNamesBtn">Save edits</button><button class="btn" id="restoreNamesBtn">Restore class</button></div>
+  </section>
+  <section class="picker-stage">
+    <div class="picker-content">
+      <div class="pool-stat" id="poolStat">Add students to begin</div>
+      <div class="name-disc"><div class="picked-wrap"><div id="pickedName">Ready?</div></div></div>
+      <div class="picker-controls"><button class="btn primary pick-main" id="pickBtn">✦ Pick a student</button><button class="btn" id="resetPoolBtn">Reset pool</button><button class="btn" id="undoPickBtn">Undo last</button></div>
+      <div class="history"><div class="history-head"><span>Selection history</span><span id="historyCount">0 selected</span></div><div class="history-list" id="historyList"><span class="small-copy">No one selected yet.</span></div></div>
+    </div>
+  </section>
+</section>
+</main>
+<footer><div class="hint" id="shortcutHint">Space = start/pause · E = edit timer · F = fullscreen</div><div id="finishTime">Finish time —</div></footer>
+</div>
+<aside class="drawer" id="drawer" aria-hidden="true"><div class="drawer-head"><h2>Timer</h2><button class="btn icon" id="closeDrawer">×</button></div>
+  <div class="field"><label for="titleInput">Title</label><input id="titleInput" value="" /></div>
+  <div class="field"><label for="metaInput">Class / label</label><input id="metaInput" value="" /></div>
+  <div class="field"><label for="subtitleInput">Details</label><textarea id="subtitleInput"></textarea></div>
+  <div class="field"><label for="instructionsInput">Instructions</label><textarea id="instructionsInput"></textarea></div><div class="sep"></div>
+  <div class="field"><label>Countdown duration</label><div class="time-grid"><input id="hoursInput" type="number" min="0" max="23" value="0" aria-label="Hours"><input id="minutesInput" type="number" min="0" max="59" value="40" aria-label="Minutes"><input id="secondsInput" type="number" min="0" max="59" value="0" aria-label="Seconds"></div><div style="display:grid;grid-template-columns:repeat(3,1fr);font-size:11px;font-weight:800;text-align:center;opacity:.65"><span>HOURS</span><span>MINUTES</span><span>SECONDS</span></div></div>
+  <div class="field"><label>Quick set</label><div class="quick-times"><button class="btn quick" data-min="10">10m</button><button class="btn quick" data-min="20">20m</button><button class="btn quick" data-min="30">30m</button><button class="btn quick" data-min="40">40m</button><button class="btn quick" data-min="60">60m</button><button class="btn quick" data-min="90">90m</button></div></div>
+  <div class="drawer-actions"><button class="btn" id="saveOnlyBtn">Save</button><button class="btn primary" id="saveStartBtn">Save & start</button></div>
+</aside>
+<div class="end-card" id="endCard"><div class="end-inner"><div class="eyebrow">Timer complete</div><h2>Time’s up.</h2><p id="endTimerName">Please stop writing.</p><div class="end-actions"><button class="btn" id="dismissEndBtn">Return to timer</button><button class="btn primary" id="restartEndBtn">Reset timer</button></div></div></div>
+<script>
+(() => {
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const el={timerTab:$('#timerTab'),randomTab:$('#randomTab'),timerView:$('#timerView'),randomView:$('#randomView'),fullscreenBtn:$('#fullscreenBtn'),shortcutHint:$('#shortcutHint'),drawer:$('#drawer'),editBtn:$('#editBtn'),closeDrawer:$('#closeDrawer'),titleInput:$('#titleInput'),metaInput:$('#metaInput'),subtitleInput:$('#subtitleInput'),instructionsInput:$('#instructionsInput'),hoursInput:$('#hoursInput'),minutesInput:$('#minutesInput'),secondsInput:$('#secondsInput'),displayTitle:$('#displayTitle'),displayMeta:$('#displayMeta'),displaySubtitle:$('#displaySubtitle'),displayInstructions:$('#displayInstructions'),countdown:$('#countdown'),status:$('#status'),timeMessage:$('#timeMessage'),finishTime:$('#finishTime'),progress:$('#progress'),startPauseBtn:$('#startPauseBtn'),minusBtn:$('#minusBtn'),plusBtn:$('#plusBtn'),resetBtn:$('#resetBtn'),soundBtn:$('#soundBtn'),saveOnlyBtn:$('#saveOnlyBtn'),saveStartBtn:$('#saveStartBtn'),endCard:$('#endCard'),endTimerName:$('#endTimerName'),dismissEndBtn:$('#dismissEndBtn'),restartEndBtn:$('#restartEndBtn'),classSelect:$('#classSelect'),classCount:$('#classCount'),namesInput:$('#namesInput'),noRepeatToggle:$('#noRepeatToggle'),saveNamesBtn:$('#saveNamesBtn'),restoreNamesBtn:$('#restoreNamesBtn'),poolStat:$('#poolStat'),pickedName:$('#pickedName'),pickBtn:$('#pickBtn'),resetPoolBtn:$('#resetPoolBtn'),undoPickBtn:$('#undoPickBtn'),historyList:$('#historyList'),historyCount:$('#historyCount')};
+let activeView='timer';
+function setView(which){activeView=which;const isTimer=which==='timer';el.timerView.classList.toggle('active',isTimer);el.randomView.classList.toggle('active',!isTimer);el.timerTab.classList.toggle('active',isTimer);el.randomTab.classList.toggle('active',!isTimer);el.shortcutHint.textContent=isTimer?'Space = start/pause · E = edit timer · F = fullscreen':'R = pick student · F = fullscreen';el.finishTime.style.visibility=isTimer?'visible':'hidden';}
+el.timerTab.onclick=()=>setView('timer');el.randomTab.onclick=()=>setView('random');
+// TIMER
+let totalSeconds=2400,remaining=2400,timerId=null,running=false,deadline=null,soundOn=true,lastRenderedSecond=null;
+const clamp=(n,min,max)=>Math.min(max,Math.max(min,Number(n)||0));
+function saveTimerData(){try{localStorage.setItem('teacherToolsTimer',JSON.stringify({title:el.titleInput.value,meta:el.metaInput.value,subtitle:el.subtitleInput.value,instructions:el.instructionsInput.value,duration:totalSeconds}))}catch(e){}}
+function loadTimerData(){try{const raw=localStorage.getItem('teacherToolsTimer');if(!raw)return;const d=JSON.parse(raw);if(d.title!=null)el.titleInput.value=d.title;if(d.meta!=null)el.metaInput.value=d.meta;if(d.subtitle!=null)el.subtitleInput.value=d.subtitle;if(d.instructions!=null)el.instructionsInput.value=d.instructions;if(Number.isFinite(d.duration)&&d.duration>0){totalSeconds=Math.floor(d.duration);remaining=totalSeconds;el.hoursInput.value=Math.floor(totalSeconds/3600);el.minutesInput.value=Math.floor((totalSeconds%3600)/60);el.secondsInput.value=totalSeconds%60}}catch(e){}}
+function formatTime(sec){sec=Math.max(0,Math.ceil(sec));const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60;return h>0?`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`:`${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`}
+function humanDuration(sec){const h=Math.floor(sec/3600),m=Math.floor((sec%3600)/60),s=sec%60,b=[];if(h)b.push(`${h} hr${h===1?'':'s'}`);if(m)b.push(`${m} min`);if(s&&!h)b.push(`${s} sec`);return b.join(' ')||'0 sec'}
+function durationInputs(){const h=clamp(el.hoursInput.value,0,23),m=clamp(el.minutesInput.value,0,59),s=clamp(el.secondsInput.value,0,59);el.hoursInput.value=h;el.minutesInput.value=m;el.secondsInput.value=s;return h*3600+m*60+s}
+function updateFinishTime(){if(remaining<=0){el.finishTime.textContent='Finish time —';return}const base=running&&deadline?new Date(deadline):new Date(Date.now()+remaining*1000);el.finishTime.textContent='Finish time '+base.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}
+function updateState(){document.body.classList.remove('warning','critical','finished');if(remaining<=0)document.body.classList.add('finished');else if(remaining<=60)document.body.classList.add('critical');else if(remaining<=300)document.body.classList.add('warning')}
+function renderTimer(){const rounded=Math.max(0,Math.ceil(remaining));if(rounded===lastRenderedSecond&&running)return;lastRenderedSecond=rounded;el.countdown.textContent=formatTime(remaining);const pct=totalSeconds>0?Math.max(0,Math.min(100,((totalSeconds-remaining)/totalSeconds)*100)):0;el.progress.style.setProperty('--p',pct.toFixed(2));if(remaining<=0){el.status.textContent='Complete';el.timeMessage.textContent='Please stop writing'}else if(running){el.status.textContent=remaining<=60?'Final minute':remaining<=300?'Finishing soon':'In progress';el.timeMessage.textContent=humanDuration(Math.ceil(remaining))+' remaining'}else if(remaining<totalSeconds){el.status.textContent='Paused';el.timeMessage.textContent=humanDuration(Math.ceil(remaining))+' remaining'}else{el.status.textContent='Ready';el.timeMessage.textContent=humanDuration(totalSeconds)+' set'}el.startPauseBtn.textContent=running?'Pause':(remaining<totalSeconds&&remaining>0?'Resume':'Start');updateState();updateFinishTime()}
+function tick(){if(!running||!deadline)return;remaining=Math.max(0,(deadline-Date.now())/1000);renderTimer();if(remaining<=0)finish()}
+function start(){if(remaining<=0)remaining=totalSeconds;if(totalSeconds<=0)return;running=true;deadline=Date.now()+remaining*1000;clearInterval(timerId);timerId=setInterval(tick,100);renderTimer()}
+function pause(){if(!running)return;remaining=Math.max(0,(deadline-Date.now())/1000);running=false;deadline=null;clearInterval(timerId);timerId=null;renderTimer()}
+function resetTimer(){running=false;clearInterval(timerId);timerId=null;deadline=null;remaining=totalSeconds;lastRenderedSecond=null;el.endCard.classList.remove('show');renderTimer()}
+function adjust(seconds){if(running){remaining=Math.max(0,(deadline-Date.now())/1000+seconds);deadline=Date.now()+remaining*1000}else remaining=Math.max(0,remaining+seconds);if(remaining>totalSeconds)totalSeconds=remaining;lastRenderedSecond=null;renderTimer();if(remaining<=0)finish()}
+function beep(){if(!soundOn)return;try{const A=window.AudioContext||window.webkitAudioContext,ctx=new A();[0,.35,.7].forEach((d,i)=>{const o=ctx.createOscillator(),g=ctx.createGain();o.type='sine';o.frequency.value=[523.25,659.25,783.99][i];g.gain.setValueAtTime(.0001,ctx.currentTime+d);g.gain.exponentialRampToValueAtTime(.18,ctx.currentTime+d+.02);g.gain.exponentialRampToValueAtTime(.0001,ctx.currentTime+d+.28);o.connect(g);g.connect(ctx.destination);o.start(ctx.currentTime+d);o.stop(ctx.currentTime+d+.3)})}catch(e){}}
+function finish(){running=false;clearInterval(timerId);timerId=null;deadline=null;remaining=0;renderTimer();beep();el.endTimerName.textContent=el.displayTitle.textContent.trim()?`${el.displayTitle.textContent} · Please stop writing.`:'Please stop writing.';el.endCard.classList.add('show')}
+function openDrawer(){pause();el.drawer.classList.add('open');el.drawer.setAttribute('aria-hidden','false');setTimeout(()=>el.titleInput.focus(),120)}function closeDrawer(){el.drawer.classList.remove('open');el.drawer.setAttribute('aria-hidden','true')}
+function saveTimerSettings(shouldStart=false){const d=durationInputs();if(d<=0){el.minutesInput.value=1;return}el.displayTitle.textContent=el.titleInput.value.trim();el.displayMeta.textContent=el.metaInput.value.trim();el.displaySubtitle.textContent=el.subtitleInput.value.trim();el.displayInstructions.textContent=el.instructionsInput.value.trim();totalSeconds=d;remaining=d;deadline=null;running=false;clearInterval(timerId);timerId=null;lastRenderedSecond=null;saveTimerData();closeDrawer();el.endCard.classList.remove('show');renderTimer();if(shouldStart)start()}
+el.startPauseBtn.onclick=()=>running?pause():start();el.resetBtn.onclick=resetTimer;el.minusBtn.onclick=()=>adjust(-60);el.plusBtn.onclick=()=>adjust(60);el.editBtn.onclick=openDrawer;el.closeDrawer.onclick=closeDrawer;el.saveOnlyBtn.onclick=()=>saveTimerSettings(false);el.saveStartBtn.onclick=()=>saveTimerSettings(true);$$('.quick').forEach(b=>b.onclick=()=>{const m=Number(b.dataset.min);el.hoursInput.value=Math.floor(m/60);el.minutesInput.value=m%60;el.secondsInput.value=0});el.soundBtn.onclick=()=>{soundOn=!soundOn;el.soundBtn.textContent=soundOn?'♪':'×';el.soundBtn.title=soundOn?'Sound on':'Sound off'};el.dismissEndBtn.onclick=()=>el.endCard.classList.remove('show');el.restartEndBtn.onclick=resetTimer;
+// RANDOM STUDENT
+const DEFAULT_CLASSES={
+  '2HCL':[
+    'Chen Siyao','Chiu Shang Peng','Choi Shao En','Chow Shan Ni','Chua Zi Heng Jayden','Chung Carys','Declan Chan Yee Kai','Dylan Chng Shao Teng','Emma Lim Ying Zhen','Huang Baiyi','Jonathan Hayden Chew','Koh Jia Cheng','Koh Jit Tsao','Liu Ziyan','Luther Sim','Ng Ling Yue','Ng Yin Fan','Ong Jun Xiang Donavan','Shi Huixin','Song Ruize','Soon Loong Chong Aaron','Tai Cian','Tai Wei','Tan Ria','Tang Yan Xi','Teo Kai Ze','Won Qing Tao','Xiong Jianjie','Xu Ruoqi','Zhang Chenhengbo'
+  ],
+  '3CLS':[
+    'Chan Jun Yeong Matthew','Chang Jia Nee','Chen Xing','Chen Zong Ze','Cheo Min Hui','Chloe Chiam Li Xuan','Estelle Lim Jia Ying','Fok Zheng Yi Myra','Franky Tnee Kee Seng','Fum Yu Xiang','Ho Rui Yang Ryan','Jenna Lai En Xi','Kaitlyn Heng','Kayden Lim Jing Teng','Lau Shaw Chen','Lee Jing Han Jovan','Lew Kai Yi','Lim Ci Ya Amelia','Lim Jun Kai Jayven','Low Yi Cong Justus','Ng Rui Jie Reyes','Nuh Al Din Hayder','Tan Tong Xuan Kayla','Tan Wei Ren Jayden','Tan Xuan Zhi Ethan','Teo Gee','Wang Jiaxuan','Xie Zijian','Yeo Yun See'
+  ],
+  '1G3':[
+    'Aden Tang Bao Kang','Alimzhan Gabidulla','Aw Zhi Heng Zavier','Boon Jie Xuan Adalyn','Chan Lok Hee Cherbelle','Chan Lok Hoi Tristan','Chia Kee Eng Phoebe','Chin Wei Xin','Chua Jia En Janelle','Chua Kee Jen','Claire Emmaline Kurniawan','Clara Wong Jia Rui','Daniel Ian Loh','Goh Guo En Ashton','Goh Jia En Mandy','Hui Xin Yu','Josella Leong Kai Yun','Kayven Toh Jun Yi','Kheng Zi Le','Kingsley Koo','Koh Ya Le Paige','Koh Yu Long','Kwok Hong Shuo Royce','Lee Yu En Adelaide','Leong Hoi Chak Zac','Li Hongbo','Low Jia Kai','Michael Patrick Pattinson','Moskvin Lynn Olegovna','Nathaniel Sim Zheng Hao','Tan Jun Heng','Tan Kai Qi Kate','Tan Kwang Kai','Xu Zimo Harry','Yeo Zheng Long Lucas'
+  ],
+  '1A2':[
+    'Began Kanishka','Chan Lok Hee Cherbelle','Chen Kai Yang','Chia Kee Eng Phoebe','Goh Guo En Ashton','Hui Xin Yu','Jaycie Low Kai Qi','Josella Leong Kai Yun','Karthigan Kannan','Kheng Zi Le','Kingsley Koo','Kong Bo Yi','Koo Sheng Zhe Jared','Kwok Hong Shuo Royce','Kylene Toh Min','Lee Jin Ning Gisele','Lee Yu En Adelaide','Li Hongbo','Low Jia Kai','Luth Syakir Suhaimi','Michael Patrick Pattinson','Moturi Shanmitha Sree','Muhamad Danial Aryan Muhamad','Natalia Aeshah Angwin','Nathaniel Sim Zheng Hao','Ong Yerin','Peh Zhen Wei Justin','Raju Manikandan Yogeshwaran','Serina Lim Jia Xin','Siti Aisyah Abdullah','Song Yunyan','Tan Kwang Kai','Tan Yu Jie Aaiden','Xu Zimo Harry','Yee Jia Ning Janine','Yeow Zhen Bin','Yong Cheng Xi','Yuan Nuoxi Elina'
+  ]
+};
+let students=[],remainingPool=[],history=[],classOverrides={},customText='';
+function parseNames(text){return [...new Set(text.split(/[\n,;\t]+/).map(s=>s.trim()).filter(Boolean))]}
+function currentClassKey(){return el.classSelect.value||'2HCL'}
+function classNames(key){if(key==='custom')return parseNames(customText);return Array.isArray(classOverrides[key])?classOverrides[key]:DEFAULT_CLASSES[key]||[]}
+function updateClassCount(){const n=parseNames(el.namesInput.value).length;el.classCount.textContent=`${n} student${n===1?'':'s'}`;el.restoreNamesBtn.textContent=currentClassKey()==='custom'?'Clear':'Restore class'}
+function saveRandomData(){try{localStorage.setItem('classroomRandomClassesV2',JSON.stringify({classKey:currentClassKey(),classOverrides,customText:currentClassKey()==='custom'?el.namesInput.value:customText,noRepeat:el.noRepeatToggle.checked,history,remainingPool}))}catch(e){}}
+function loadClass(key,reset=true){const names=classNames(key);el.namesInput.value=names.join('\n');students=[...names];if(reset){remainingPool=[...students];history=[];el.pickedName.textContent=students.length?'Ready?':'Add names'}updateClassCount();renderRandom()}
+function loadRandomData(){let loaded=false;try{const raw=localStorage.getItem('classroomRandomClassesV2');if(raw){const d=JSON.parse(raw);classOverrides=d.classOverrides&&typeof d.classOverrides==='object'?d.classOverrides:{};customText=typeof d.customText==='string'?d.customText:'';const key=(d.classKey&&[...el.classSelect.options].some(o=>o.value===d.classKey))?d.classKey:'2HCL';el.classSelect.value=key;if(typeof d.noRepeat==='boolean')el.noRepeatToggle.checked=d.noRepeat;el.namesInput.value=classNames(key).join('\n');students=parseNames(el.namesInput.value);history=Array.isArray(d.history)?d.history.filter(n=>students.includes(n)):[];remainingPool=Array.isArray(d.remainingPool)?d.remainingPool.filter(n=>students.includes(n)):students.filter(n=>!history.includes(n));if(!remainingPool.length&&students.length&&!history.length)remainingPool=[...students];loaded=true}}catch(e){}if(!loaded){el.classSelect.value='2HCL';loadClass('2HCL',true)}updateClassCount()}
+function syncNames(reset=true){students=parseNames(el.namesInput.value);el.namesInput.value=students.join('\n');const key=currentClassKey();if(key==='custom')customText=el.namesInput.value;else classOverrides[key]=[...students];if(reset){remainingPool=[...students];history=[];el.pickedName.textContent=students.length?'Ready?':'Add names'}updateClassCount();saveRandomData();renderRandom()}
+function restoreClass(){const key=currentClassKey();if(key==='custom'){customText='';el.namesInput.value=''}else{delete classOverrides[key];el.namesInput.value=(DEFAULT_CLASSES[key]||[]).join('\n')}students=parseNames(el.namesInput.value);remainingPool=[...students];history=[];el.pickedName.textContent=students.length?'Ready?':'Add names';updateClassCount();saveRandomData();renderRandom()}
+function renderRandom(){students=parseNames(el.namesInput.value);updateClassCount();const noRepeat=el.noRepeatToggle.checked;const available=noRepeat?remainingPool.length:students.length;el.poolStat.textContent=!students.length?'Add students to begin':noRepeat?`${available} of ${students.length} students remaining`:`${students.length} students · repeats allowed`;el.pickBtn.disabled=!students.length||(noRepeat&&remainingPool.length===0);el.resetPoolBtn.disabled=!students.length;el.undoPickBtn.disabled=!history.length;el.historyCount.textContent=`${history.length} selected`;el.historyList.innerHTML='';if(!history.length){const s=document.createElement('span');s.className='small-copy';s.textContent='No one selected yet.';el.historyList.appendChild(s)}else history.slice().reverse().forEach(n=>{const c=document.createElement('span');c.className='chip cn';c.textContent=n;el.historyList.appendChild(c)})}
+function pickStudent(){students=parseNames(el.namesInput.value);if(!students.length)return;const noRepeat=el.noRepeatToggle.checked;if(noRepeat&&remainingPool.length===0){el.pickedName.textContent='Everyone picked!';renderRandom();return}const source=noRepeat?remainingPool:students;let spins=0;el.pickBtn.disabled=true;const spin=setInterval(()=>{el.pickedName.textContent=source[Math.floor(Math.random()*source.length)];spins++;if(spins>=12){clearInterval(spin);const idx=Math.floor(Math.random()*source.length),name=source[idx];el.pickedName.textContent=name;history.push(name);if(noRepeat)remainingPool.splice(idx,1);saveRandomData();renderRandom()}},65)}
+function resetPool(){students=parseNames(el.namesInput.value);remainingPool=[...students];history=[];el.pickedName.textContent=students.length?'Ready?':'Add names';saveRandomData();renderRandom()}
+function undoPick(){if(!history.length)return;const name=history.pop();if(el.noRepeatToggle.checked&&!remainingPool.includes(name)&&students.includes(name))remainingPool.push(name);el.pickedName.textContent=history.length?history[history.length-1]:'Ready?';saveRandomData();renderRandom()}
+el.classSelect.onchange=()=>{if(currentClassKey()==='custom')el.namesInput.value=customText;else el.namesInput.value=classNames(currentClassKey()).join('\n');students=parseNames(el.namesInput.value);remainingPool=[...students];history=[];el.pickedName.textContent=students.length?'Ready?':'Add names';updateClassCount();saveRandomData();renderRandom()};
+el.saveNamesBtn.onclick=()=>syncNames(true);el.restoreNamesBtn.onclick=restoreClass;el.pickBtn.onclick=pickStudent;el.resetPoolBtn.onclick=resetPool;el.undoPickBtn.onclick=undoPick;el.noRepeatToggle.onchange=()=>{if(el.noRepeatToggle.checked&&remainingPool.length===0&&students.length)remainingPool=students.filter(n=>!history.includes(n));saveRandomData();renderRandom()};el.namesInput.addEventListener('input',()=>{students=parseNames(el.namesInput.value);if(currentClassKey()==='custom')customText=el.namesInput.value;updateClassCount();renderRandom()});
+// GLOBAL
+el.fullscreenBtn.onclick=async()=>{try{if(!document.fullscreenElement)await document.documentElement.requestFullscreen();else await document.exitFullscreen()}catch(e){}};
+document.addEventListener('keydown',e=>{if(e.target.matches('input,textarea'))return;if(e.key.toLowerCase()==='f'){el.fullscreenBtn.click();return}if(activeView==='timer'){if(e.code==='Space'){e.preventDefault();running?pause():start()}else if(e.key.toLowerCase()==='e')openDrawer()}else if(activeView==='random'&&e.key.toLowerCase()==='r')pickStudent();if(e.key==='Escape'&&el.drawer.classList.contains('open'))closeDrawer()});
+loadTimerData();el.displayTitle.textContent=el.titleInput.value.trim();el.displayMeta.textContent=el.metaInput.value.trim();el.displaySubtitle.textContent=el.subtitleInput.value.trim();el.displayInstructions.textContent=el.instructionsInput.value.trim();renderTimer();loadRandomData();renderRandom();
+try{if(!localStorage.getItem('teacherToolsWelcomed')){el.drawer.classList.add('open');el.drawer.setAttribute('aria-hidden','false');localStorage.setItem('teacherToolsWelcomed','1')}}catch(e){}
+})();
+</script>
+</body></html>
