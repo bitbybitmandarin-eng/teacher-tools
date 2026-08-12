@@ -1,4 +1,4 @@
-name: Publish classroom timer
+name: Build classroom timer
 
 on:
   push:
@@ -6,13 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-concurrency:
-  group: pages
-  cancel-in-progress: true
+  contents: write
 
 jobs:
   build:
@@ -21,33 +15,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Rebuild classroom timer
+      - name: Rebuild exact classroom timer HTML
         shell: bash
         run: |
-          mkdir -p _site/class-timer
-          : > _site/class-timer/index.html
+          : > class-timer-live.html
           for f in class-timer-src/chunk*.b64; do
-            base64 --decode "$f" >> _site/class-timer/index.html
+            base64 --decode "$f" >> class-timer-live.html
           done
-          cat > _site/index.html <<'EOF'
-          <!doctype html><meta charset="utf-8"><meta http-equiv="refresh" content="0; url=./class-timer/"><title></title>
-          EOF
 
-      - name: Configure Pages
-        uses: actions/configure-pages@v5
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
-        with:
-          path: _site
-
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
-    needs: build
-    steps:
-      - name: Deploy to GitHub Pages
-        id: deployment
-        uses: actions/deploy-pages@v4
+      - name: Publish reconstructed file to repository
+        shell: bash
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add class-timer-live.html
+          if git diff --cached --quiet; then
+            echo "No changes to publish"
+          else
+            git commit -m "Build classroom timer live HTML"
+            git push
+          fi
